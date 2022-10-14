@@ -1,0 +1,138 @@
+int main() {
+	/*选择要提取的B*/
+	int nb = 9500;
+	vector<int> oldbidset;  //子集导演序号
+	for (int i = 0; i < nb; i++) {
+		oldbidset.push_back(i);
+	}
+
+	//记录b类顶点的新序号-旧序号关系
+	ofstream outfileb(newfile + "/node/2.txt");
+	if (!outfileb) {
+		cerr << newfile + "/node/2.txt  outfile error!" << endl;
+		exit(1);
+	}
+	for (int i = 0; i < nb; i++) {
+		int newbid = i;
+		int oldbid = oldbidset[i];
+		outfileb << newbid << " " << oldbid << endl;
+	}
+	outfileb.close();
+	cout << "b类顶点newid-oldid已记录" << endl;
+
+	/*根据b提取r*/
+	//读入0类边b-r
+	cout << "读入0类边b-r" << endl;
+	ifstream infile1(file + "/edge/0.txt");
+	//判断文件是否存在
+	if (!infile1) {
+		cerr << file + "/edge/0.txt  infile error!" << endl;
+		exit(1);
+	}
+	string einfo10;
+	getline(infile1, einfo10);
+	string einfo1;
+	//写入边文件b-r
+	ofstream outfile1(newfile + "/edge/0.txt");
+	//判断文件是否存在
+	if (!outfile1) {
+		cerr << newfile + "/edge/0.txt outfile error!" << endl;
+		exit(1);
+	}
+	map<int, int> oldrid_newrid;
+	vector<int> oldridset;
+	int newrid = 0;
+	while (getline(infile1, einfo1)) {
+		istringstream seinfo(einfo1);
+		int bid, rid;
+		seinfo >> bid >> rid;  //读入边b-r
+		if (bid < nb) {  //如果是提取的b,则提取r
+			auto iter = oldrid_newrid.find(rid);  //若r未被提取过
+			if (iter == oldrid_newrid.end()) {  
+				oldrid_newrid[rid] = newrid;  //给oldmid新编号
+				oldridset.push_back(rid);
+				outfile1 << bid << " " << newrid << endl;  //将边写入边文件1.txt
+				newrid++;
+			}
+			else {
+				int newrid = oldrid_newrid[rid];
+				outfile1 << bid << " " << newrid << endl;  //将边写入边文件1.txt
+			}
+		}
+	}
+	infile1.close();
+	outfile1.close();
+	cout << "b-r读取/记录完毕" << endl;
+    
+
+	//记录r类顶点的新序号-旧序号关系
+	ofstream outfiler(newfile + "/node/1.txt");
+	if (!outfiler) {
+		cerr << newfile + "/node/1.txt outfile error!" << endl;
+		exit(1);
+	}
+	for (int i = 0; i < oldridset.size(); i++) {
+		outfiler << i << " " << oldridset[i] << endl;
+	}
+	cout << "r类顶点newid-oldid已记录" << endl;
+	outfiler.close();
+	oldridset.clear();
+
+	/*根据r提取u*/
+	cout << "读入1类边r-u" << endl;
+	//读入1类边r-u
+	ifstream infile0(file + "/edge/1.txt");
+	//判断文件是否存在
+	if (!infile0) {
+		cerr << file + "/edge/1.txt  infile error!" << endl;
+		exit(1);
+	}
+	ofstream outfile0(newfile + "/edge/1.txt");
+	//判断文件是否存在
+	if (!outfile0) {
+		cerr << newfile + "/edge/1.txt outfile error!" << endl;
+		exit(1);
+	}
+	string einfo00;
+	getline(infile0, einfo00);
+	string einfo0;
+	map<int, int> olduid_newuid;
+	vector<int> olduidset;
+	int newuid = 0;
+	while (getline(infile0, einfo0)) {
+		istringstream seinfo(einfo0);
+		int rid, uid;
+		seinfo >> rid >> uid;
+		if (oldrid_newrid.find(rid) != oldrid_newrid.end()) {  //如果r是被提取的点，则u需要被提取
+			int newrid = oldrid_newrid[rid];
+			auto iter = olduid_newuid.find(uid);
+			if (iter == olduid_newuid.end()) {  //u尚未被提取
+				olduid_newuid[uid] = newuid;  //给oldaid新编号
+				olduidset.push_back(uid);
+				outfile0 << newrid << " " << newuid << endl;  //将边写入边文件0.txt
+				newuid++;
+			}
+			else {
+				int newuid = olduid_newuid[uid];
+				outfile0 << newrid << " " << newuid << endl;
+			}
+		}
+	}
+	infile0.close(); outfile0.close();
+	cout << "边r-u读取/记录完毕" << endl;
+	oldrid_newrid.clear(); olduid_newuid.clear();
+
+	//记录u类顶点的新序号-旧序号关系
+	ofstream outfileu(newfile + "/node/0.txt");
+	if (!outfileu) {
+		cerr << newfile + "/node/0.txt outfile error!" << endl;
+		exit(1);
+	}
+	for (int i = 0; i < olduidset.size(); i++) {
+		outfileu << i << " " << olduidset[i] << endl;
+	}
+	cout << "u类顶点newid-oldid已记录" << endl;
+	oldbidset.clear();
+	outfileu.close();
+	return 0;
+}
